@@ -17,7 +17,15 @@
     "lib": [
       "es2018",
       "dom"
-    ]
+    ],
+    "paths": {
+      "ng-async-compute": [
+        "dist/ng-async-compute"
+      ],
+      "ng-async-compute/*": [
+        "dist/ng-async-compute/*"
+      ]
+    }
   },
   "angularCompilerOptions": {
     "fullTemplateTypeCheck": true,
