@@ -1,12 +1,15 @@
 import { async, TestBed } from "@angular/core/testing";
-import { getProjector, AsyncComputeModule } from "projects/ng-async-compute/src/public-api";
+import {
+  AsyncComputeModule,
+  getProjector
+} from "projects/ng-async-compute/src/public-api";
 import { AppComponent } from "./app.component";
 
 describe("AppComponent", () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [AppComponent],
-      imports: [AsyncComputeModule],
+      imports: [AsyncComputeModule]
     }).compileComponents();
   }));
 
@@ -32,6 +35,20 @@ describe("AppComponent", () => {
 
       expect(result).toEqual(
         `The user's name is Miles Davis, the user toggle is true, and the timed toggle is false`
+      );
+    });
+  });
+
+  describe("descriptionOfStateLazy", () => {
+    it("creates the correct description", () => {
+      // Can test without running ngOnInit
+      const component = new AppComponent();
+      const projector = getProjector(component.descriptionOfStateLazy);
+      const name = "Jaco";
+      const timeToggle = false;
+      component.userToggle = true;
+      expect(projector(name, timeToggle)).toEqual(
+        `The user's name is Jaco, the user toggle is true, and the timed toggle is false`
       );
     });
   });

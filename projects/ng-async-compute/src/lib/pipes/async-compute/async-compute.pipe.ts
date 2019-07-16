@@ -8,35 +8,37 @@ import { combineLatest, Observable, Subscription } from "rxjs";
 
 export type Projector<A> = (...args: any[]) => A;
 
+type ObservableLike<A> = Observable<A> | (() => Observable<A>);
+
 type Compute1<A, Result> = [Observable<A>, (a: A) => Result];
 
 type Compute2<A, B, Result> = [
-  Observable<A>,
-  Observable<B>,
+  ObservableLike<A>,
+  ObservableLike<B>,
   (a: A, b: B) => Result
 ];
 
 type Compute3<A, B, C, Result> = [
-  Observable<A>,
-  Observable<B>,
-  Observable<C>,
+  ObservableLike<A>,
+  ObservableLike<B>,
+  ObservableLike<C>,
   (a: A, b: B, c: C) => Result
 ];
 
 type Compute4<A, B, C, D, Result> = [
-  Observable<A>,
-  Observable<B>,
-  Observable<C>,
-  Observable<D>,
+  ObservableLike<A>,
+  ObservableLike<B>,
+  ObservableLike<C>,
+  ObservableLike<D>,
   (a: A, b: B, c: C, d: D) => Result
 ];
 
 type Compute5<A, B, C, D, E, Result> = [
-  Observable<A>,
-  Observable<B>,
-  Observable<C>,
-  Observable<D>,
-  Observable<E>,
+  ObservableLike<A>,
+  ObservableLike<B>,
+  ObservableLike<C>,
+  ObservableLike<D>,
+  ObservableLike<E>,
   (a: A, b: B, c: C, d: D, e: E) => Result
 ];
 
@@ -83,12 +85,16 @@ export class AsyncComputePipe<A> implements PipeTransform, OnDestroy {
 
   init(compute: Compute<A>) {
     this.projector = getProjector(compute);
-    const observables = withoutLast(compute);
+    const observables = withoutLast(compute).map(
+      (observableLike: ObservableLike<any>) => typeof observableLike === "function"
+        ? observableLike()
+        : observableLike
+    );
 
     this.subscription = combineLatest(...observables).subscribe(
       observableValues => {
-      this.observableValues = observableValues;
-      this.ref.markForCheck();
+        this.observableValues = observableValues;
+        this.ref.markForCheck();
       }
     );
   }

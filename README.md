@@ -23,11 +23,23 @@ export class AppComponent implements OnInit {
 
   userToggle = false;
   
+  // Non-lazy way - see ngOnInit. `Compute`s represent computed values.
   descriptionOfState: Compute<string>;
+
+  // Lazy way - pass functions that return observables.
+  // These functions get called after `ngOnInit`.
+  descriptionOfStateLazy = compute(
+    () => this.name$,
+    () => this.timedToggle$,
+    (name, timeToggle) =>
+      `The user's name is ${name}, the user toggle is ${
+        this.userToggle
+      }, and the timed toggle is ${timeToggle}`
+  );
 
   ngOnInit() {
     // The view will update whenever these emit
-    this.name$ = of("Bob");
+    this.name$ = of("Miles");
     this.timedToggle$ = timer(1000, 1000).pipe(
       map(n => (n % 2 ? true : false))
     );
@@ -54,5 +66,8 @@ export class AppComponent implements OnInit {
 <div>
   <!-- Print the result of the function passed to `compute` -->
   {{ descriptionOfState | asyncCompute }}
+</div>
+<div>
+  {{ descriptionOfStateLazy | asyncCompute }}
 </div>
 ```
