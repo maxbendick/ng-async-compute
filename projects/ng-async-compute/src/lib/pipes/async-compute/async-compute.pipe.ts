@@ -85,10 +85,12 @@ export class AsyncComputePipe<A> implements PipeTransform, OnDestroy {
     this.projector = getProjector(compute);
     const observables = withoutLast(compute);
 
-    combineLatest(...observables).subscribe(observableValues => {
+    this.subscription = combineLatest(...observables).subscribe(
+      observableValues => {
       this.observableValues = observableValues;
       this.ref.markForCheck();
-    });
+      }
+    );
   }
 
   ngOnDestroy() {
