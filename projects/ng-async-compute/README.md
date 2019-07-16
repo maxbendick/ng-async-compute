@@ -1,24 +1,73 @@
-# NgAsyncCompute
+# ng-async-compute
 
-This library was generated with [Angular CLI](https://github.com/angular/angular-cli) version 8.1.1.
+This is a very early project. Extensive testing, documentation, performance improvements, and `Compute` composition are on the way.
 
-## Code scaffolding
+Compute combinations of observables with non-observables without subscribing or logic in the template.
 
-Run `ng generate component component-name --project ng-async-compute` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module --project ng-async-compute`.
-> Note: Don't forget to add `--project ng-async-compute` or else it will be added to the default project in your `angular.json` file. 
+## Example
+### app.component.ts
+```typescript
+import { Component, OnInit } from "@angular/core";
+import { of, timer, Observable } from "rxjs";
+import { map } from "rxjs/operators";
+import { compute, Compute } from "ng-async-compute";
 
-## Build
+@Component({
+  selector: "app-root",
+  templateUrl: "./app.component.html",
+  styleUrls: ["./app.component.css"]
+})
+export class AppComponent implements OnInit {
+  timedToggle$: Observable<boolean>;
+  name$: Observable<string>;
 
-Run `ng build ng-async-compute` to build the project. The build artifacts will be stored in the `dist/` directory.
+  userToggle = false;
+  
+  // Non-lazy way - see ngOnInit. `Compute`s represent computed values.
+  descriptionOfState: Compute<string>;
 
-## Publishing
+  // Lazy way - pass functions that return observables.
+  // These functions get called after `ngOnInit`.
+  descriptionOfStateLazy = compute(
+    () => this.name$,
+    () => this.timedToggle$,
+    (name, timeToggle) =>
+      `The user's name is ${name}, the user toggle is ${
+        this.userToggle
+      }, and the timed toggle is ${timeToggle}`
+  );
 
-After building your library with `ng build ng-async-compute`, go to the dist folder `cd dist/ng-async-compute` and run `npm publish`.
+  ngOnInit() {
+    // The view will update whenever these emit
+    this.name$ = of("Miles");
+    this.timedToggle$ = timer(1000, 1000).pipe(
+      map(n => (n % 2 ? true : false))
+    );
 
-## Running unit tests
+    // Use observed values and component properties freely
+    this.descriptionOfState = compute(
+      this.name$,
+      this.timedToggle$,
+      (name, timeToggle) =>
+        `name is ${name}, userToggle is ${this.userToggle}, and timedToggle is ${timeToggle}`
+    );
+  }
 
-Run `ng test ng-async-compute` to execute the unit tests via [Karma](https://karma-runner.github.io).
+  // This causes the view to update
+  clickToggleButton() {
+    this.userToggle = !this.userToggle;
+  }
+}
+```
+### app.component.html
+```html
+<button (click)="clickToggleButton()">User Toggle</button>
 
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+<div>
+  <!-- Print the result of the function passed to `compute` -->
+  {{ descriptionOfState | asyncCompute }}
+</div>
+<div>
+  {{ descriptionOfStateLazy | asyncCompute }}
+</div>
+```
